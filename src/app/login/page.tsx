@@ -89,7 +89,7 @@ export default function LoginPage() {
         <div className="inline-flex items-center gap-3 mb-2">
           <span className="text-4xl">🍱</span>
           <h1 className="font-display text-4xl sm:text-5xl font-bold text-foreground tracking-tight">
-            Savell&apos;s Lunch
+            Savells Lunch
           </h1>
         </div>
         <p className="font-body text-warm-gray text-lg mt-1">

@@ -34,7 +34,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <Link href="/dashboard" className="flex items-center gap-2">
             <span className="text-xl">🍱</span>
             <span className="font-display font-bold text-lg text-foreground hidden sm:block">
-              Savell&apos;s Lunch
+              Savells Lunch
             </span>
           </Link>
 
@@ -74,16 +74,28 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 Settings
               </Link>
             ) : (
-              <Link
-                href="/dashboard/change-pin"
-                className={`px-3 py-1.5 rounded-lg font-display text-sm font-medium transition-colors ${
-                  pathname === '/dashboard/change-pin'
-                    ? 'bg-amber/10 text-amber-dark'
-                    : 'text-warm-gray hover:text-foreground'
-                }`}
-              >
-                Change PIN
-              </Link>
+              <>
+                <Link
+                  href="/dashboard/change-icon"
+                  className={`px-3 py-1.5 rounded-lg font-display text-sm font-medium transition-colors ${
+                    pathname === '/dashboard/change-icon'
+                      ? 'bg-amber/10 text-amber-dark'
+                      : 'text-warm-gray hover:text-foreground'
+                  }`}
+                >
+                  Icon
+                </Link>
+                <Link
+                  href="/dashboard/change-pin"
+                  className={`px-3 py-1.5 rounded-lg font-display text-sm font-medium transition-colors ${
+                    pathname === '/dashboard/change-pin'
+                      ? 'bg-amber/10 text-amber-dark'
+                      : 'text-warm-gray hover:text-foreground'
+                  }`}
+                >
+                  PIN
+                </Link>
+              </>
             )}
           </nav>
 

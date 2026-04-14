@@ -26,7 +26,8 @@ export default function SelectionModal({
   kidConfig,
 }: SelectionModalProps) {
   const [mode, setMode] = useState<'entree' | 'packed'>(
-    currentSelection?.selection_type || 'entree'
+    currentSelection?.selection_type ||
+      (dayMenu && dayMenu.entrees.length === 0 ? 'packed' : 'entree')
   );
   const [selectedEntree, setSelectedEntree] = useState(
     currentSelection?.selection_type === 'entree' ? currentSelection.selection_value : ''

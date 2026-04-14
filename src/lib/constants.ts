@@ -17,3 +17,13 @@ export const MENU_CACHE_HOURS = 24;
 export const SIDE_CATEGORIES = new Set([
   'vegetable', 'grain', 'fruit', 'beverage', 'side', 'milk', 'condiment',
 ]);
+
+// Oldest to youngest
+export const KID_ORDER = ['Patrick', 'Bridget', 'Michael', 'Blaise', 'Leo', 'George'] as const;
+
+export function sortKidsByAge<T extends { name: string }>(kids: T[]): T[] {
+  return [...kids].sort(
+    (a, b) => KID_ORDER.indexOf(a.name as typeof KID_ORDER[number]) -
+              KID_ORDER.indexOf(b.name as typeof KID_ORDER[number])
+  );
+}

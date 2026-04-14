@@ -6,6 +6,7 @@ import { useSelections } from '@/lib/hooks/use-selections';
 import { format, addDays } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { sortKidsByAge } from '@/lib/constants';
 
 const KIDS_CONFIG: { name: string; emoji: string; color: string; school: string }[] = [
   { name: 'Patrick', emoji: '🏀', color: '#ef4444', school: 'Boles JHS' },
@@ -29,7 +30,7 @@ export default function OverviewPage() {
     }
   }, [user, router]);
 
-  const childProfiles = profiles.filter((p) => p.role === 'child');
+  const childProfiles = sortKidsByAge(profiles.filter((p) => p.role === 'child'));
   const weekDays = Array.from({ length: 5 }, (_, i) => {
     const date = addDays(weekStart, i);
     return { dateStr: format(date, 'yyyy-MM-dd'), dayShort: format(date, 'EEE'), dayNum: format(date, 'M/d') };
@@ -121,7 +122,7 @@ export default function OverviewPage() {
                     className="w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0"
                     style={{ backgroundColor: (config?.color || child.avatar_color) + '20' }}
                   >
-                    {config?.emoji || child.avatar_emoji}
+                    {child.avatar_emoji || config?.emoji}
                   </span>
                   <div className="min-w-0">
                     <span className="font-display text-sm font-medium text-foreground block truncate">
@@ -136,23 +137,27 @@ export default function OverviewPage() {
                 {/* Day cells */}
                 {weekDays.map(({ dateStr }) => {
                   const sel = getSelection(child.id, dateStr);
+                  if (!sel) {
+                    return (
+                      <div key={dateStr} className="px-1.5 py-3 flex items-center justify-center">
+                        <span className="text-warm-gray-light text-lg">·</span>
+                      </div>
+                    );
+                  }
+                  const isPacked = sel.selection_type === 'packed';
                   return (
                     <div key={dateStr} className="px-1.5 py-3 flex items-center justify-center">
-                      {sel ? (
-                        <div
-                          className="text-center w-full px-1.5 py-1.5 rounded-lg text-[11px] font-body leading-tight"
-                          style={{
-                            backgroundColor: (config?.color || child.avatar_color) + '10',
-                            color: config?.color || child.avatar_color,
-                          }}
-                        >
-                          {sel.selection_type === 'packed' && (
-                            <span className="block text-xs mb-0.5">📦</span>
-                          )}
-                          <span className="line-clamp-2">{sel.selection_value}</span>
+                      {isPacked ? (
+                        <div className="text-center w-full px-1.5 py-2 rounded-lg text-[11px] font-body leading-tight bg-amber text-white shadow-sm ring-2 ring-amber-dark/20">
+                          <span className="block text-base mb-0.5">📦</span>
+                          <span className="line-clamp-2 font-display font-semibold">
+                            {sel.selection_value}
+                          </span>
                         </div>
                       ) : (
-                        <span className="text-warm-gray-light text-lg">·</span>
+                        <div className="text-center w-full px-1.5 py-1.5 rounded-lg text-[11px] font-body leading-tight bg-cream-dark/40 text-warm-gray">
+                          <span className="line-clamp-2">{sel.selection_value}</span>
+                        </div>
                       )}
                     </div>
                   );

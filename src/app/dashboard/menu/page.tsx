@@ -6,7 +6,7 @@ import { useMenu, useWeekNavigation } from '@/lib/hooks/use-menu';
 import { useSelections } from '@/lib/hooks/use-selections';
 import { format, addDays, isToday, isBefore, startOfDay } from 'date-fns';
 import { School, Profile, DayMenu } from '@/lib/types';
-import { SCHOOL_MAP } from '@/lib/constants';
+import { SCHOOL_MAP, sortKidsByAge } from '@/lib/constants';
 import SelectionModal from '@/components/selection-modal';
 
 const KIDS_CONFIG: { name: string; emoji: string; color: string }[] = [
@@ -23,7 +23,7 @@ export default function MenuPage() {
   const { weekStart, prevWeek, nextWeek, goToCurrentWeek } = useWeekNavigation();
 
   // Parent: select which child to view; Kid: always themselves
-  const childProfiles = profiles.filter((p) => p.role === 'child');
+  const childProfiles = sortKidsByAge(profiles.filter((p) => p.role === 'child'));
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
 
   // Determine the active child profile
@@ -129,7 +129,7 @@ export default function MenuPage() {
                   }`}
                   style={isSelected ? { backgroundColor: config?.color || child.avatar_color } : undefined}
                 >
-                  <span className="text-base">{config?.emoji || child.avatar_emoji}</span>
+                  <span className="text-base">{child.avatar_emoji || config?.emoji}</span>
                   {child.name}
                 </button>
               );
@@ -305,27 +305,35 @@ function SchoolMenuSection({
 
       {/* Menu items */}
       <div className="mb-3">
-        <div className="flex flex-wrap gap-1.5">
-          {dayMenu.entrees.map((item) => (
-            <span
-              key={item.id}
-              className="inline-block bg-amber/10 text-amber-dark px-2.5 py-1 rounded-lg font-body text-sm"
-            >
-              {item.name}
-            </span>
-          ))}
-        </div>
-        {dayMenu.sides.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-2">
-            {dayMenu.sides.map((item) => (
-              <span
-                key={item.id}
-                className="inline-block text-warm-gray px-2 py-0.5 rounded font-body text-xs bg-cream-dark"
-              >
-                {item.name}
-              </span>
-            ))}
-          </div>
+        {dayMenu.entrees.length === 0 ? (
+          <p className="text-warm-gray font-body text-sm italic">
+            Menu not published yet — you can still pack a lunch
+          </p>
+        ) : (
+          <>
+            <div className="flex flex-wrap gap-1.5">
+              {dayMenu.entrees.map((item) => (
+                <span
+                  key={item.id}
+                  className="inline-block bg-amber/10 text-amber-dark px-2.5 py-1 rounded-lg font-body text-sm"
+                >
+                  {item.name}
+                </span>
+              ))}
+            </div>
+            {dayMenu.sides.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {dayMenu.sides.map((item) => (
+                  <span
+                    key={item.id}
+                    className="inline-block text-warm-gray px-2 py-0.5 rounded font-body text-xs bg-cream-dark"
+                  >
+                    {item.name}
+                  </span>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -345,7 +353,7 @@ function SchoolMenuSection({
                   backgroundColor: selection ? (config?.color || child.avatar_color) + '08' : undefined,
                 }}
               >
-                <span className="text-sm">{config?.emoji || child.avatar_emoji}</span>
+                <span className="text-sm">{child.avatar_emoji || config?.emoji}</span>
                 <span className="font-display text-xs font-medium text-foreground">
                   {child.name}
                 </span>

@@ -3,7 +3,7 @@ import "./globals.css";
 import { AuthProvider } from "@/lib/context/auth-context";
 
 export const metadata: Metadata = {
-  title: "Savell's Lunch",
+  title: "Savells Lunch",
   description: "Family lunch tracker for Arlington ISD",
 };
 
