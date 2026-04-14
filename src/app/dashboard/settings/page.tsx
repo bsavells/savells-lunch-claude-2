@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/context/auth-context';
 import { useRouter } from 'next/navigation';
-import { sortKidsByAge } from '@/lib/constants';
+import { sortKidsByAge, SCHOOLS } from '@/lib/constants';
+import { School, Profile } from '@/lib/types';
 
 interface ParentRow {
   id: string;
@@ -42,6 +43,8 @@ export default function SettingsPage() {
       <ParentsSection currentProfileId={user?.profileId} />
 
       <ChangePasswordSection />
+
+      <SchoolAssignmentSection childProfiles={childProfiles} />
 
       <div className="bg-white rounded-2xl border border-cream-dark p-6 mb-6">
         <h3 className="font-display font-semibold text-lg text-foreground mb-4">
@@ -400,6 +403,74 @@ function ChangePasswordSection() {
           {status === 'saving' ? 'Updating…' : 'Update password'}
         </button>
       </form>
+    </div>
+  );
+}
+
+function SchoolAssignmentSection({ childProfiles }: { childProfiles: Profile[] }) {
+  const { refresh } = useAuth();
+  const [saving, setSaving] = useState<string | null>(null);
+  const [saved, setSaved] = useState<string | null>(null);
+
+  const handleChange = async (profileId: string, school: School) => {
+    setSaving(profileId);
+    try {
+      const res = await fetch(`/api/children/${profileId}/school`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ school }),
+      });
+      if (!res.ok) {
+        const d = await res.json();
+        alert(d.error || 'Failed to update school');
+        return;
+      }
+      await refresh();
+      setSaved(profileId);
+      setTimeout(() => setSaved(null), 2000);
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-2xl border border-cream-dark p-6 mb-6">
+      <h3 className="font-display font-semibold text-lg text-foreground mb-2">School assignments</h3>
+      <p className="font-body text-sm text-warm-gray mb-5">
+        Change which school each child attends. This updates their lunch menu.
+      </p>
+      <div className="space-y-3">
+        {childProfiles.map((child) => (
+          <div key={child.id} className="flex items-center gap-3 p-3 rounded-xl border border-cream-dark">
+            <span
+              className="w-10 h-10 rounded-lg flex items-center justify-center text-lg shrink-0"
+              style={{ backgroundColor: child.avatar_color + '20' }}
+            >
+              {child.avatar_emoji}
+            </span>
+            <span className="font-display font-medium text-sm text-foreground w-20 shrink-0">
+              {child.name}
+            </span>
+            <select
+              value={child.school || ''}
+              onChange={(e) => handleChange(child.id, e.target.value as School)}
+              disabled={saving === child.id}
+              className="flex-1 px-3 py-2 rounded-lg border border-cream-dark font-body text-sm focus:outline-none focus:ring-2 focus:ring-amber bg-white disabled:opacity-50"
+            >
+              {SCHOOLS.map((s) => (
+                <option key={s.slug} value={s.slug}>{s.label}</option>
+              ))}
+            </select>
+            <span className="text-xs font-body w-10 text-center">
+              {saving === child.id ? (
+                <span className="text-warm-gray">…</span>
+              ) : saved === child.id ? (
+                <span className="text-green-600">✓</span>
+              ) : null}
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { MENU_CACHE_HOURS } from '@/lib/constants';
 import { School } from '@/lib/types';
 import { parseISO } from 'date-fns';
 
-const VALID_SCHOOLS: School[] = ['boles-jhs', 'moore-elementary-school'];
+const VALID_SCHOOLS: School[] = ['boles-jhs', 'moore-elementary-school', 'martin-hs'];
 
 export async function GET(
   request: NextRequest,

@@ -1,5 +1,5 @@
 export type UserRole = 'parent' | 'child';
-export type School = 'boles-jhs' | 'moore-elementary-school';
+export type School = 'boles-jhs' | 'moore-elementary-school' | 'martin-hs';
 export type SelectionType = 'entree' | 'packed';
 
 export interface Profile {

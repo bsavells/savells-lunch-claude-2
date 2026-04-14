@@ -42,6 +42,7 @@ export default function MenuPage() {
 
   const { menu: bolesMenu, loading: bolesLoading } = useMenu('boles-jhs', weekStart);
   const { menu: mooreMenu, loading: mooreLoading } = useMenu('moore-elementary-school', weekStart);
+  const { menu: martinMenu, loading: martinLoading } = useMenu('martin-hs', weekStart);
 
   const { selections, saveSelection, deleteSelection, getSelection } = useSelections(
     weekStart,
@@ -55,7 +56,7 @@ export default function MenuPage() {
   const [modalMenu, setModalMenu] = useState<DayMenu | null>(null);
 
   const profilesNotReady = profiles.length === 0;
-  const loading = authLoading || profilesNotReady || bolesLoading || mooreLoading;
+  const loading = authLoading || profilesNotReady || bolesLoading || mooreLoading || martinLoading;
 
   const weekDays = Array.from({ length: 5 }, (_, i) => {
     const date = addDays(weekStart, i);
@@ -74,6 +75,7 @@ export default function MenuPage() {
   const getMenuForSchool = (school: string | null, dateStr: string): DayMenu | undefined => {
     if (school === 'boles-jhs') return bolesMenu?.[dateStr];
     if (school === 'moore-elementary-school') return mooreMenu?.[dateStr];
+    if (school === 'martin-hs') return martinMenu?.[dateStr];
     return undefined;
   };
 
@@ -168,9 +170,14 @@ export default function MenuPage() {
             const showMoore = user?.role === 'parent'
               ? (!selectedChildId || activeChild?.school === 'moore-elementary-school')
               : activeSchool === 'moore-elementary-school';
+            const showMartin = user?.role === 'parent'
+              ? (!selectedChildId || activeChild?.school === 'martin-hs')
+              : activeSchool === 'martin-hs';
 
             const bolesDay = bolesMenu?.[dateStr];
             const mooreDay = mooreMenu?.[dateStr];
+            const martinDay = martinMenu?.[dateStr];
+            const shownCount = [showBoles && bolesDay, showMoore && mooreDay, showMartin && martinDay].filter(Boolean).length;
 
             return (
               <div
@@ -206,7 +213,7 @@ export default function MenuPage() {
                     <SchoolMenuSection
                       schoolLabel="Boles JHS"
                       dayMenu={bolesDay}
-                      showLabel={showBoles && showMoore}
+                      showLabel={shownCount > 1}
                       childProfiles={
                         user?.role === 'parent'
                           ? (selectedChildId && activeChild
@@ -221,7 +228,7 @@ export default function MenuPage() {
                     />
                   )}
 
-                  {showBoles && showMoore && bolesDay && mooreDay && (
+                  {showBoles && bolesDay && showMoore && mooreDay && (
                     <hr className="my-4 border-cream-dark" />
                   )}
 
@@ -229,7 +236,7 @@ export default function MenuPage() {
                     <SchoolMenuSection
                       schoolLabel="Moore Elementary"
                       dayMenu={mooreDay}
-                      showLabel={showBoles && showMoore}
+                      showLabel={shownCount > 1}
                       childProfiles={
                         user?.role === 'parent'
                           ? (selectedChildId && activeChild
@@ -244,7 +251,30 @@ export default function MenuPage() {
                     />
                   )}
 
-                  {!bolesDay && !mooreDay && (
+                  {(showMoore && mooreDay || showBoles && bolesDay) && showMartin && martinDay && (
+                    <hr className="my-4 border-cream-dark" />
+                  )}
+
+                  {showMartin && martinDay && (
+                    <SchoolMenuSection
+                      schoolLabel="Martin High School"
+                      dayMenu={martinDay}
+                      showLabel={shownCount > 1}
+                      childProfiles={
+                        user?.role === 'parent'
+                          ? (selectedChildId && activeChild
+                              ? [activeChild]
+                              : childProfiles.filter((c) => c.school === 'martin-hs'))
+                          : activeChild ? [activeChild] : []
+                      }
+                      dateStr={dateStr}
+                      getSelection={getSelection}
+                      getKidConfig={getKidConfig}
+                      onSelect={openSelection}
+                    />
+                  )}
+
+                  {!bolesDay && !mooreDay && !martinDay && (
                     <p className="text-warm-gray font-body text-sm italic">No menu available</p>
                   )}
                 </div>

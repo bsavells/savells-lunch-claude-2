@@ -1,13 +1,15 @@
 import { School } from './types';
 
 export const SCHOOLS: { slug: School; label: string; short: string }[] = [
-  { slug: 'boles-jhs', label: 'Boles Junior High', short: 'Boles' },
   { slug: 'moore-elementary-school', label: 'Moore Elementary School', short: 'Moore' },
+  { slug: 'boles-jhs', label: 'Boles Junior High', short: 'Boles JHS' },
+  { slug: 'martin-hs', label: 'Martin High School', short: 'Martin HS' },
 ];
 
 export const SCHOOL_MAP: Record<School, string> = {
   'boles-jhs': 'Boles Junior High',
   'moore-elementary-school': 'Moore Elementary',
+  'martin-hs': 'Martin High School',
 };
 
 export const NUTRISLICE_BASE = 'https://arlingtonisd.api.nutrislice.com/menu/api/weeks/school';
