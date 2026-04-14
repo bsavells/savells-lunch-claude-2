@@ -1,20 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/service';
-import { createClient } from '@/lib/supabase/server';
-
-async function requireParent() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
-  const service = createServiceClient();
-  const { data: profile } = await service
-    .from('profiles')
-    .select('role')
-    .eq('auth_user_id', user.id)
-    .single();
-  if (profile?.role !== 'parent') return null;
-  return user;
-}
+import { PRIMARY_PARENT_EMAIL, requireParent } from '@/lib/parent-auth';
 
 export async function GET() {
   if (!(await requireParent())) {
@@ -36,7 +22,7 @@ export async function GET() {
         const { data: userData } = await service.auth.admin.getUserById(p.auth_user_id);
         email = userData?.user?.email ?? null;
       }
-      return { ...p, email };
+      return { ...p, email, isPrimary: email?.toLowerCase() === PRIMARY_PARENT_EMAIL };
     })
   );
 
@@ -44,8 +30,9 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  if (!(await requireParent())) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const user = await requireParent();
+  if (!user || user.email?.toLowerCase() !== PRIMARY_PARENT_EMAIL) {
+    return NextResponse.json({ error: 'Only the primary parent can add accounts' }, { status: 403 });
   }
 
   const { name, email, password } = await request.json();

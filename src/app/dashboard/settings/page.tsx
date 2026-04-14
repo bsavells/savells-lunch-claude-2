@@ -11,6 +11,7 @@ interface ParentRow {
   email: string | null;
   avatar_emoji: string;
   avatar_color: string;
+  isPrimary: boolean;
 }
 
 const KIDS_CONFIG: { name: string; emoji: string; color: string }[] = [
@@ -208,13 +209,16 @@ function ParentsSection({ currentProfileId }: { currentProfileId?: string }) {
     await load();
   };
 
+  const currentParent = parents.find((p) => p.id === currentProfileId);
+  const isPrimaryUser = !!currentParent?.isPrimary;
+
   return (
     <div className="bg-white rounded-2xl border border-cream-dark p-6 mb-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-display font-semibold text-lg text-foreground">
           Parent Accounts
         </h3>
-        {!showAdd && (
+        {isPrimaryUser && !showAdd && (
           <button
             onClick={() => setShowAdd(true)}
             className="px-3 py-1.5 rounded-lg bg-amber text-white font-display font-medium text-sm hover:bg-amber-dark transition-colors"
@@ -224,7 +228,9 @@ function ParentsSection({ currentProfileId }: { currentProfileId?: string }) {
         )}
       </div>
       <p className="font-body text-sm text-warm-gray mb-5">
-        Add another parent login to manage menus and selections together.
+        {isPrimaryUser
+          ? 'Add another parent login to manage menus and selections together.'
+          : 'Only the primary parent can add or remove other parent accounts.'}
       </p>
 
       {loading ? (
@@ -240,10 +246,17 @@ function ParentsSection({ currentProfileId }: { currentProfileId?: string }) {
                 {p.avatar_emoji}
               </span>
               <div className="flex-1 min-w-0">
-                <p className="font-display font-medium text-sm text-foreground">{p.name}</p>
+                <p className="font-display font-medium text-sm text-foreground flex items-center gap-2">
+                  {p.name}
+                  {p.isPrimary && (
+                    <span className="text-[10px] font-body uppercase tracking-wide bg-amber/15 text-amber-dark px-1.5 py-0.5 rounded">
+                      primary
+                    </span>
+                  )}
+                </p>
                 <p className="font-body text-xs text-warm-gray truncate">{p.email || 'no login linked'}</p>
               </div>
-              {p.id !== currentProfileId && (
+              {isPrimaryUser && !p.isPrimary && (
                 <button
                   onClick={() => handleRemove(p.id, p.name)}
                   className="text-xs font-body text-red-500 hover:text-red-700 px-2"
@@ -259,7 +272,7 @@ function ParentsSection({ currentProfileId }: { currentProfileId?: string }) {
         </div>
       )}
 
-      {showAdd && (
+      {isPrimaryUser && showAdd && (
         <div className="border-t border-cream-dark pt-4 space-y-3">
           <input
             type="text"

@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const refresh = async () => {
-    await fetchSession();
+    await Promise.all([fetchSession(), fetchProfiles()]);
   };
 
   return (

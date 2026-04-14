@@ -19,7 +19,7 @@ const KIDS_CONFIG: { name: string; emoji: string; color: string }[] = [
 ];
 
 export default function MenuPage() {
-  const { user, profiles } = useAuth();
+  const { user, profiles, loading: authLoading } = useAuth();
   const { weekStart, prevWeek, nextWeek, goToCurrentWeek } = useWeekNavigation();
 
   // Parent: select which child to view; Kid: always themselves
@@ -54,7 +54,8 @@ export default function MenuPage() {
   const [modalChild, setModalChild] = useState<Profile | null>(null);
   const [modalMenu, setModalMenu] = useState<DayMenu | null>(null);
 
-  const loading = bolesLoading || mooreLoading;
+  const profilesNotReady = profiles.length === 0;
+  const loading = authLoading || profilesNotReady || bolesLoading || mooreLoading;
 
   const weekDays = Array.from({ length: 5 }, (_, i) => {
     const date = addDays(weekStart, i);

@@ -1,28 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/service';
-import { createClient } from '@/lib/supabase/server';
+import { PRIMARY_PARENT_EMAIL, requirePrimaryParent } from '@/lib/parent-auth';
 
 export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const primary = await requirePrimaryParent();
+  if (!primary) {
+    return NextResponse.json(
+      { error: 'Only the primary parent can remove accounts' },
+      { status: 403 }
+    );
+  }
 
   const service = createServiceClient();
-  const { data: me } = await service
-    .from('profiles')
-    .select('id, role')
-    .eq('auth_user_id', user.id)
-    .single();
-  if (me?.role !== 'parent') {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-  if (me.id === id) {
-    return NextResponse.json({ error: 'Cannot remove yourself' }, { status: 400 });
-  }
 
   const { data: target } = await service
     .from('profiles')
@@ -31,6 +25,16 @@ export async function DELETE(
     .single();
   if (!target || target.role !== 'parent') {
     return NextResponse.json({ error: 'Parent not found' }, { status: 404 });
+  }
+
+  if (target.auth_user_id) {
+    const { data: targetUser } = await service.auth.admin.getUserById(target.auth_user_id);
+    if (targetUser?.user?.email?.toLowerCase() === PRIMARY_PARENT_EMAIL) {
+      return NextResponse.json(
+        { error: 'Cannot remove the primary parent account' },
+        { status: 400 }
+      );
+    }
   }
 
   const { error: delProfileErr } = await service.from('profiles').delete().eq('id', id);

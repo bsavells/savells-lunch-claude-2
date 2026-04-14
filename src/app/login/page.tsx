@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/context/auth-context';
 
-const KIDS = [
+const KIDS_BASE: { name: string; emoji: string; color: string; school: string }[] = [
   { name: 'Patrick', emoji: '🏀', color: '#ef4444', school: 'Boles JHS' },
   { name: 'Bridget', emoji: '🎨', color: '#ec4899', school: 'Boles JHS' },
   { name: 'Michael', emoji: '⚡', color: '#f97316', school: 'Moore Elementary' },
@@ -15,7 +15,8 @@ const KIDS = [
 
 export default function LoginPage() {
   const [mode, setMode] = useState<'kids' | 'parent'>('kids');
-  const [selectedKid, setSelectedKid] = useState<typeof KIDS[0] | null>(null);
+  const [selectedKid, setSelectedKid] = useState<typeof KIDS_BASE[0] | null>(null);
+  const [kids, setKids] = useState(KIDS_BASE);
   const [pin, setPin] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -31,6 +32,25 @@ export default function LoginPage() {
       router.push('/dashboard');
     }
   }, [user, loading, router]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/profiles')
+      .then((r) => r.json())
+      .then((data) => {
+        if (cancelled || !data.profiles) return;
+        setKids((current) =>
+          current.map((k) => {
+            const p = data.profiles.find(
+              (x: { name: string; avatar_emoji: string }) => x.name === k.name
+            );
+            return p?.avatar_emoji ? { ...k, emoji: p.avatar_emoji } : k;
+          })
+        );
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
 
   const handlePinDigit = (digit: string) => {
     if (pin.length >= 8) return;
@@ -135,7 +155,7 @@ export default function LoginPage() {
               Who&apos;s hungry?
             </p>
             <div className="grid grid-cols-2 gap-3 sm:gap-4">
-              {KIDS.map((kid, i) => (
+              {kids.map((kid, i) => (
                 <button
                   key={kid.name}
                   onClick={() => { setSelectedKid(kid); setPin(''); setError(''); }}
