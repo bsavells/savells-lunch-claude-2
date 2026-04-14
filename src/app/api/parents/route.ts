@@ -35,12 +35,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Only the primary parent can add accounts' }, { status: 403 });
   }
 
-  const { name, email, password } = await request.json();
-  if (!name || !email || !password) {
-    return NextResponse.json({ error: 'name, email, password required' }, { status: 400 });
-  }
-  if (password.length < 8) {
-    return NextResponse.json({ error: 'Password must be at least 8 characters' }, { status: 400 });
+  const { name, email, redirectTo } = await request.json();
+  if (!name || !email) {
+    return NextResponse.json({ error: 'name and email required' }, { status: 400 });
   }
 
   const service = createServiceClient();
@@ -54,17 +51,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'A profile with that name already exists' }, { status: 400 });
   }
 
-  const { data: created, error: createErr } = await service.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
+  const { data: invited, error: inviteErr } = await service.auth.admin.inviteUserByEmail(email, {
+    redirectTo: redirectTo || 'https://lunch.savells.net/login',
   });
-  if (createErr || !created.user) {
-    return NextResponse.json({ error: createErr?.message || 'Failed to create user' }, { status: 500 });
+  if (inviteErr || !invited.user) {
+    return NextResponse.json({ error: inviteErr?.message || 'Failed to send invitation' }, { status: 500 });
   }
 
   const { error: profileErr } = await service.from('profiles').insert({
-    auth_user_id: created.user.id,
+    auth_user_id: invited.user.id,
     name,
     role: 'parent',
     avatar_emoji: '👤',
@@ -72,7 +67,7 @@ export async function POST(request: NextRequest) {
   });
 
   if (profileErr) {
-    await service.auth.admin.deleteUser(created.user.id);
+    await service.auth.admin.deleteUser(invited.user.id);
     return NextResponse.json({ error: profileErr.message }, { status: 500 });
   }
 

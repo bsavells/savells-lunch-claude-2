@@ -162,7 +162,6 @@ function ParentsSection({ currentProfileId }: { currentProfileId?: string }) {
   const [showAdd, setShowAdd] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState('');
 
@@ -180,8 +179,8 @@ function ParentsSection({ currentProfileId }: { currentProfileId?: string }) {
 
   const handleAdd = async () => {
     setError('');
-    if (!name.trim() || !email.trim() || password.length < 8) {
-      setError('Name, email, and password (8+ chars) required');
+    if (!name.trim() || !email.trim()) {
+      setError('Name and email required');
       return;
     }
     setAdding(true);
@@ -189,15 +188,19 @@ function ParentsSection({ currentProfileId }: { currentProfileId?: string }) {
       const res = await fetch('/api/parents', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), email: email.trim(), password }),
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim(),
+          redirectTo: `${window.location.origin}/login`,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setName(''); setEmail(''); setPassword('');
+      setName(''); setEmail('');
       setShowAdd(false);
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to add parent');
+      setError(err instanceof Error ? err.message : 'Failed to send invitation');
     } finally {
       setAdding(false);
     }
@@ -279,6 +282,9 @@ function ParentsSection({ currentProfileId }: { currentProfileId?: string }) {
 
       {isPrimaryUser && showAdd && (
         <div className="border-t border-cream-dark pt-4 space-y-3">
+          <p className="font-body text-xs text-warm-gray">
+            They&apos;ll receive an email invitation to set their own password.
+          </p>
           <input
             type="text"
             value={name}
@@ -293,13 +299,6 @@ function ParentsSection({ currentProfileId }: { currentProfileId?: string }) {
             placeholder="Email"
             className="w-full px-3 py-2 rounded-lg border border-cream-dark font-body text-sm focus:outline-none focus:ring-2 focus:ring-amber"
           />
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Password (8+ characters)"
-            className="w-full px-3 py-2 rounded-lg border border-cream-dark font-body text-sm focus:outline-none focus:ring-2 focus:ring-amber"
-          />
           {error && <p className="text-red-500 text-xs font-body">{error}</p>}
           <div className="flex gap-2">
             <button
@@ -307,10 +306,10 @@ function ParentsSection({ currentProfileId }: { currentProfileId?: string }) {
               disabled={adding}
               className="flex-1 px-4 py-2 rounded-lg bg-amber text-white font-display font-medium text-sm disabled:opacity-40"
             >
-              {adding ? 'Adding…' : 'Create parent login'}
+              {adding ? 'Sending…' : 'Send invitation'}
             </button>
             <button
-              onClick={() => { setShowAdd(false); setError(''); setName(''); setEmail(''); setPassword(''); }}
+              onClick={() => { setShowAdd(false); setError(''); setName(''); setEmail(''); }}
               className="px-4 py-2 rounded-lg border border-cream-dark font-display font-medium text-sm text-warm-gray"
             >
               Cancel
