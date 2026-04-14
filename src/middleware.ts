@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { verifyKidSession } from './lib/auth';
 
-const PUBLIC_PATHS = ['/login', '/api/auth', '/api/profiles'];
+const PUBLIC_PATHS = ['/login', '/reset-password', '/api/auth', '/api/profiles'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

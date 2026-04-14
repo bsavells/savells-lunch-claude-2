@@ -41,6 +41,8 @@ export default function SettingsPage() {
 
       <ParentsSection currentProfileId={user?.profileId} />
 
+      <ChangePasswordSection />
+
       <div className="bg-white rounded-2xl border border-cream-dark p-6 mb-6">
         <h3 className="font-display font-semibold text-lg text-foreground mb-4">
           Manage Kid PINs
@@ -313,6 +315,91 @@ function ParentsSection({ currentProfileId }: { currentProfileId?: string }) {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function ChangePasswordSection() {
+  const [current, setCurrent] = useState('');
+  const [next, setNext] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [status, setStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
+  const [message, setMessage] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMessage('');
+    if (next.length < 8) { setMessage('New password must be at least 8 characters.'); setStatus('error'); return; }
+    if (next !== confirm) { setMessage('Passwords do not match.'); setStatus('error'); return; }
+
+    setStatus('saving');
+    try {
+      // Re-authenticate with current password first
+      const { createClient } = await import('@/lib/supabase/client');
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.email) throw new Error('Not signed in');
+
+      const { error: signInErr } = await supabase.auth.signInWithPassword({ email: user.email, password: current });
+      if (signInErr) throw new Error('Current password is incorrect.');
+
+      const { error: updateErr } = await supabase.auth.updateUser({ password: next });
+      if (updateErr) throw updateErr;
+
+      setStatus('success');
+      setCurrent(''); setNext(''); setConfirm('');
+      setTimeout(() => setStatus('idle'), 3000);
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Failed to update password.');
+      setStatus('error');
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-2xl border border-cream-dark p-6 mb-6">
+      <h3 className="font-display font-semibold text-lg text-foreground mb-2">Change password</h3>
+      <p className="font-body text-sm text-warm-gray mb-5">Update your parent login password.</p>
+
+      {(status === 'error') && message && (
+        <p className="mb-4 text-sm font-body text-red-600 bg-red-50 px-4 py-3 rounded-xl">{message}</p>
+      )}
+      {status === 'success' && (
+        <p className="mb-4 text-sm font-body text-green-700 bg-green-50 px-4 py-3 rounded-xl">Password updated successfully.</p>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-3 max-w-sm">
+        <input
+          type="password"
+          value={current}
+          onChange={(e) => { setCurrent(e.target.value); setStatus('idle'); setMessage(''); }}
+          placeholder="Current password"
+          required
+          className="w-full px-3 py-2 rounded-lg border border-cream-dark font-body text-sm focus:outline-none focus:ring-2 focus:ring-amber"
+        />
+        <input
+          type="password"
+          value={next}
+          onChange={(e) => { setNext(e.target.value); setStatus('idle'); setMessage(''); }}
+          placeholder="New password (8+ characters)"
+          required
+          className="w-full px-3 py-2 rounded-lg border border-cream-dark font-body text-sm focus:outline-none focus:ring-2 focus:ring-amber"
+        />
+        <input
+          type="password"
+          value={confirm}
+          onChange={(e) => { setConfirm(e.target.value); setStatus('idle'); setMessage(''); }}
+          placeholder="Confirm new password"
+          required
+          className="w-full px-3 py-2 rounded-lg border border-cream-dark font-body text-sm focus:outline-none focus:ring-2 focus:ring-amber"
+        />
+        <button
+          type="submit"
+          disabled={status === 'saving'}
+          className="px-5 py-2 rounded-lg bg-amber text-white font-display font-medium text-sm disabled:opacity-40"
+        >
+          {status === 'saving' ? 'Updating…' : 'Update password'}
+        </button>
+      </form>
     </div>
   );
 }

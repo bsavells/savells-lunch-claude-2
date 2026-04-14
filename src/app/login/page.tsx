@@ -17,6 +17,9 @@ export default function LoginPage() {
   const [mode, setMode] = useState<'kids' | 'parent'>('kids');
   const [selectedKid, setSelectedKid] = useState<typeof KIDS_BASE[0] | null>(null);
   const [kids, setKids] = useState(KIDS_BASE);
+  const [forgotMode, setForgotMode] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotStatus, setForgotStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
   const [pin, setPin] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -78,6 +81,17 @@ export default function LoginPage() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotStatus('sending');
+    const { createClient } = await import('@/lib/supabase/client');
+    const supabase = createClient();
+    await supabase.auth.resetPasswordForEmail(forgotEmail, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setForgotStatus('sent');
   };
 
   const handleParentLogin = async (e: React.FormEvent) => {
@@ -285,7 +299,7 @@ export default function LoginPage() {
           </div>
         )}
 
-        {mode === 'parent' && (
+        {mode === 'parent' && !forgotMode && (
           <form
             onSubmit={handleParentLogin}
             className="animate-slide-up bg-white rounded-3xl p-8 shadow-sm border border-cream-dark"
@@ -315,7 +329,7 @@ export default function LoginPage() {
               />
             </label>
 
-            <label className="block mb-6">
+            <label className="block mb-2">
               <span className="font-body text-sm font-medium text-warm-gray block mb-1.5">
                 Password
               </span>
@@ -329,6 +343,16 @@ export default function LoginPage() {
               />
             </label>
 
+            <div className="flex justify-end mb-6">
+              <button
+                type="button"
+                onClick={() => { setForgotMode(true); setForgotEmail(email); setForgotStatus('idle'); setError(''); }}
+                className="font-body text-xs text-warm-gray hover:text-amber-dark transition-colors"
+              >
+                Forgot password?
+              </button>
+            </div>
+
             <button
               type="submit"
               disabled={isSubmitting}
@@ -341,6 +365,62 @@ export default function LoginPage() {
               )}
             </button>
           </form>
+        )}
+
+        {mode === 'parent' && forgotMode && (
+          <div className="animate-slide-up bg-white rounded-3xl p-8 shadow-sm border border-cream-dark">
+            <h2 className="font-display text-2xl font-bold text-foreground mb-2 text-center">
+              Reset password
+            </h2>
+            <p className="font-body text-sm text-warm-gray mb-6 text-center">
+              Enter your email and we&apos;ll send a reset link.
+            </p>
+
+            {forgotStatus === 'sent' ? (
+              <div className="text-center">
+                <span className="text-3xl">📬</span>
+                <p className="font-body text-sm text-foreground mt-3 mb-6">
+                  Check your inbox — a reset link is on its way to <strong>{forgotEmail}</strong>.
+                </p>
+                <button
+                  onClick={() => { setForgotMode(false); setForgotStatus('idle'); }}
+                  className="font-body text-sm text-amber-dark hover:underline"
+                >
+                  Back to login
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleForgotPassword} className="space-y-4">
+                <label className="block">
+                  <span className="font-body text-sm font-medium text-warm-gray block mb-1.5">Email</span>
+                  <input
+                    type="email"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-cream-dark bg-cream font-body text-foreground placeholder:text-warm-gray-light focus:outline-none focus:ring-2 focus:ring-amber focus:border-transparent transition-shadow"
+                    placeholder="you@email.com"
+                    required
+                  />
+                </label>
+                <button
+                  type="submit"
+                  disabled={forgotStatus === 'sending'}
+                  className="w-full py-3.5 rounded-xl bg-amber text-white font-display font-semibold text-lg disabled:opacity-50 flex items-center justify-center"
+                >
+                  {forgotStatus === 'sending' ? (
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : 'Send reset link'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setForgotMode(false); setForgotStatus('idle'); }}
+                  className="w-full font-body text-sm text-warm-gray hover:text-foreground transition-colors"
+                >
+                  Back to login
+                </button>
+              </form>
+            )}
+          </div>
         )}
       </div>
 
