@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__8f546672-0055-4b44-9c48-b40cfab4188e__apply_migration",
+      "mcp__8f546672-0055-4b44-9c48-b40cfab4188e__execute_sql",
+      "Bash(node -e \"console.log\\(require\\('crypto'\\).randomBytes\\(32\\).toString\\('hex'\\)\\)\")",
+      "Bash(npm run:*)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(node -e ':*)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/api/auth/session)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/api/auth/logout)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/api/auth/pin-login)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/api/selections)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/api/auth/ping)"
+    ]
+  }
+}
