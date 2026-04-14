@@ -76,6 +76,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             ) : (
               <>
                 <Link
+                  href="/dashboard/my-week"
+                  className={`px-3 py-1.5 rounded-lg font-display text-sm font-medium transition-colors ${
+                    pathname === '/dashboard/my-week'
+                      ? 'bg-amber/10 text-amber-dark'
+                      : 'text-warm-gray hover:text-foreground'
+                  }`}
+                >
+                  My Week
+                </Link>
+                <Link
                   href="/dashboard/change-icon"
                   className={`px-3 py-1.5 rounded-lg font-display text-sm font-medium transition-colors ${
                     pathname === '/dashboard/change-icon'
