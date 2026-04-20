@@ -13,17 +13,17 @@
   --warm-gray-light: #D6D3D1;
 }
 
-/* Dark mode — warm ember palette */
+/* Dark mode — clean slate palette */
 .dark {
-  --background: #1A1208;
-  --foreground: #F0E6D3;
-  --cream: #251A0E;
-  --cream-dark: #332410;
+  --background: #0F1117;
+  --foreground: #E8EAED;
+  --cream: #1C1F26;
+  --cream-dark: #2D3140;
   --amber: #F59E0B;
   --amber-light: #FCD34D;
   --amber-dark: #D97706;
-  --warm-gray: #A89070;
-  --warm-gray-light: #4A3828;
+  --warm-gray: #9AA0AD;
+  --warm-gray-light: #343844;
 }
 
 @theme inline {
@@ -54,10 +54,10 @@ body {
 }
 
 .dark .linen-bg {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' viewBox='0 0 4 4'%3E%3Cpath fill='%236b4c2a' fill-opacity='0.12' d='M1 3h1v1H1V3zm2-2h1v1H3V1z'%3E%3C/path%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' viewBox='0 0 4 4'%3E%3Cpath fill='%234a5060' fill-opacity='0.18' d='M1 3h1v1H1V3zm2-2h1v1H3V1z'%3E%3C/path%3E%3C/svg%3E");
 }
 
-/* Dark mode card surfaces (bg-white → warm dark walnut) */
+/* Dark mode card surfaces (bg-white → dark slate) */
 .dark .bg-white {
   background-color: var(--cream) !important;
 }
