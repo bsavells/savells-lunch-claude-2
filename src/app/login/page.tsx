@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/context/auth-context';
+import { useTheme } from '@/lib/context/theme-context';
 
 const KIDS_BASE: { name: string; emoji: string; color: string; school: string }[] = [
   { name: 'Patrick', emoji: '🏀', color: '#ef4444', school: 'Boles JHS' },
@@ -28,6 +29,7 @@ export default function LoginPage() {
   const [shaking, setShaking] = useState(false);
 
   const { user, loading, login, pinLogin } = useAuth();
+  const { theme, toggle: toggleTheme } = useTheme();
   const router = useRouter();
 
   useEffect(() => {
@@ -118,6 +120,31 @@ export default function LoginPage() {
 
   return (
     <div className="linen-bg min-h-screen flex flex-col items-center justify-center px-4 py-8">
+      {/* Theme toggle — top-right corner */}
+      <button
+        onClick={toggleTheme}
+        aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+        className="fixed top-4 right-4 z-50 w-10 h-10 rounded-xl bg-cream-dark hover:bg-warm-gray-light text-warm-gray hover:text-foreground flex items-center justify-center transition-colors shadow-sm"
+      >
+        {theme === 'dark' ? (
+          <svg className="theme-icon-enter" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" y1="1" x2="12" y2="3"/>
+            <line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/>
+            <line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+        ) : (
+          <svg className="theme-icon-enter" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+        )}
+      </button>
+
       {/* Header */}
       <div className="text-center mb-8 animate-slide-up" style={{ animationDelay: '0ms' }}>
         <div className="inline-flex items-center gap-3 mb-2">

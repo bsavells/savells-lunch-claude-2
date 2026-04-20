@@ -13,6 +13,19 @@
   --warm-gray-light: #D6D3D1;
 }
 
+/* Dark mode — warm ember palette */
+.dark {
+  --background: #1A1208;
+  --foreground: #F0E6D3;
+  --cream: #251A0E;
+  --cream-dark: #332410;
+  --amber: #F59E0B;
+  --amber-light: #FCD34D;
+  --amber-dark: #D97706;
+  --warm-gray: #A89070;
+  --warm-gray-light: #4A3828;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -31,12 +44,44 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: 'DM Sans', sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Linen texture overlay */
 .linen-bg {
   background-color: var(--cream);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' viewBox='0 0 4 4'%3E%3Cpath fill='%23d4c5b0' fill-opacity='0.15' d='M1 3h1v1H1V3zm2-2h1v1H3V1z'%3E%3C/path%3E%3C/svg%3E");
+}
+
+.dark .linen-bg {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' viewBox='0 0 4 4'%3E%3Cpath fill='%236b4c2a' fill-opacity='0.12' d='M1 3h1v1H1V3zm2-2h1v1H3V1z'%3E%3C/path%3E%3C/svg%3E");
+}
+
+/* Dark mode card surfaces (bg-white → warm dark walnut) */
+.dark .bg-white {
+  background-color: var(--cream) !important;
+}
+
+/* Smooth color transitions on interactive elements */
+.dark * {
+  border-color: inherit;
+}
+
+/* Header backdrop in dark mode */
+.dark .backdrop-blur-lg {
+  background-color: color-mix(in srgb, var(--cream) 85%, transparent) !important;
+}
+
+/* Theme toggle animation */
+@keyframes sun-to-moon {
+  0%   { transform: rotate(0deg) scale(1); }
+  50%  { transform: rotate(180deg) scale(0.5); opacity: 0; }
+  51%  { transform: rotate(180deg) scale(0.5); opacity: 0; }
+  100% { transform: rotate(360deg) scale(1); opacity: 1; }
+}
+
+.theme-icon-enter {
+  animation: sun-to-moon 0.4s ease-out forwards;
 }
 
 /* PIN dot animation */
