@@ -37,7 +37,21 @@ function isSideStation(stationName: string): boolean {
 }
 
 // Serving units that indicate a side (scoops, small cups) rather than a full entree
-const SIDE_SERVING_PATTERNS = /scoop|cup\s*#|fl\s*oz|1\s*oz|packet/i;
+const SIDE_SERVING_PATTERNS = /scoop|cup|fl\s*oz|\boz\b|packet/i;
+
+// Name-based rules for items Nutrislice miscategorises or leaves uncategorised
+function isSideByName(name: string): boolean {
+  const lower = name.toLowerCase().trim();
+  // Accompaniments: "w/ Pickles", "with Honey Wheat Biscuit", "w/ Danimals Yogurt"
+  if (lower.startsWith('w/') || lower.startsWith('with ')) return true;
+  // Generic selectable sides: "Fruit Option", "Vegetable Option"
+  if (lower.endsWith(' option')) return true;
+  // Nacho/Salad bar toppings listed as separate line items
+  if (lower.startsWith('nacho bar') || lower.startsWith('salad bar')) return true;
+  // "Or 9" Flour Tortilla" — alternative grain/wrap choice, not an entree
+  if (lower.startsWith('or ')) return true;
+  return false;
+}
 
 interface NutrisliceDay {
   date: string;
@@ -93,7 +107,13 @@ export async function fetchMenuFromNutrislice(school: School, mondayDate: string
         imageUrl: item.food.image_thumbnail || item.food.image_url || undefined,
       };
 
-      // Layer 1: explicit category from Nutrislice
+      // Layer 1: name-based rules — override Nutrislice mislabelling
+      if (isSideByName(menuItem.name)) {
+        sides.push(menuItem);
+        continue;
+      }
+
+      // Layer 2: explicit category from Nutrislice
       if (category && SIDE_CATEGORIES.has(category)) {
         sides.push(menuItem);
         continue;
@@ -103,14 +123,14 @@ export async function fetchMenuFromNutrislice(school: School, mondayDate: string
         continue;
       }
 
-      // Layer 2: station name (e.g. "Vegetables", "Fruit")
+      // Layer 3: station name (e.g. "Vegetables", "Fruit", "Nacho Bar")
       const stationName = item.station_id ? stationNames.get(item.station_id) ?? '' : '';
       if (stationName && isSideStation(stationName)) {
         sides.push(menuItem);
         continue;
       }
 
-      // Layer 3: serving unit suggests a scooped/poured side
+      // Layer 4: serving unit suggests a scooped/poured side
       const servingUnit = item.serving_size_unit ?? '';
       if (servingUnit && SIDE_SERVING_PATTERNS.test(servingUnit)) {
         sides.push(menuItem);
