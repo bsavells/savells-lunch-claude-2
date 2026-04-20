@@ -34,10 +34,16 @@ export function useMenu(school: School | null, weekStart: Date) {
   return { menu, loading, error, refetch: fetchMenu };
 }
 
+function getDefaultWeekStart(): Date {
+  const now = new Date();
+  const isFriday = now.getDay() === 5;
+  const isPastCutoff = now.getHours() >= 15; // 3 PM
+  const base = isFriday && isPastCutoff ? addWeeks(now, 1) : now;
+  return startOfWeek(base, { weekStartsOn: 1 });
+}
+
 export function useWeekNavigation() {
-  const [weekStart, setWeekStart] = useState(() =>
-    startOfWeek(new Date(), { weekStartsOn: 1 })
-  );
+  const [weekStart, setWeekStart] = useState(getDefaultWeekStart);
 
   const prevWeek = () => setWeekStart((w) => addWeeks(w, -1));
   const nextWeek = () => setWeekStart((w) => addWeeks(w, 1));
