@@ -3,7 +3,8 @@
 import { useAuth } from '@/lib/context/auth-context';
 import { useWeekNavigation } from '@/lib/hooks/use-menu';
 import { useSelections } from '@/lib/hooks/use-selections';
-import { format, addDays } from 'date-fns';
+import { useSelectionStats, getPrediction, computeWeekAccuracy } from '@/lib/hooks/use-selection-stats';
+import { format, addDays, isToday, isFuture, parseISO } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { sortKidsByAge } from '@/lib/constants';
@@ -22,6 +23,8 @@ export default function OverviewPage() {
   const router = useRouter();
   const { weekStart, prevWeek, nextWeek, goToCurrentWeek } = useWeekNavigation();
   const { selections, loading } = useSelections(weekStart);
+  const { predictions, loading: statsLoading } = useSelectionStats();
+  const weekAccuracy = computeWeekAccuracy(predictions, selections);
 
   // Only parent can see overview
   useEffect(() => {
@@ -84,6 +87,14 @@ export default function OverviewPage() {
           <p className="font-display text-2xl font-bold text-foreground">{packedCount}</p>
           <p className="font-body text-xs text-warm-gray">Packed lunches</p>
         </div>
+        {weekAccuracy && weekAccuracy.total > 0 && (
+          <div className="bg-white rounded-2xl border border-cream-dark px-4 py-3 flex-1 text-center">
+            <p className="font-display text-2xl font-bold text-amber-dark">
+              {weekAccuracy.correct}/{weekAccuracy.total}
+            </p>
+            <p className="font-body text-xs text-warm-gray">Predicted right</p>
+          </div>
+        )}
       </div>
 
       {/* Summary Grid */}
@@ -138,6 +149,33 @@ export default function OverviewPage() {
                 {weekDays.map(({ dateStr }) => {
                   const sel = getSelection(child.id, dateStr);
                   if (!sel) {
+                    const dateObj = parseISO(dateStr);
+                    const isTodayOrFuture = isToday(dateObj) || isFuture(dateObj);
+                    const weekday = dateObj.getDay();
+                    const prediction = isTodayOrFuture && !statsLoading
+                      ? getPrediction(predictions, child.id, weekday)
+                      : null;
+
+                    if (prediction) {
+                      const isPacked = prediction.predicted_type === 'packed';
+                      return (
+                        <div key={dateStr} className="px-1.5 py-3 flex items-center justify-center">
+                          <div className={`text-center w-full px-1.5 py-2 rounded-lg leading-none border border-dashed ${
+                            isPacked
+                              ? 'border-amber-dark/40 bg-amber/10'
+                              : 'border-cream-dark bg-cream-dark/30'
+                          }`}>
+                            <span className="block text-base mb-0.5">
+                              {isPacked ? '📦' : '🍽️'}
+                            </span>
+                            <span className="font-body text-[9px] text-warm-gray font-medium">
+                              {prediction.confidence}%
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    }
+
                     return (
                       <div key={dateStr} className="px-1.5 py-3 flex items-center justify-center">
                         <span className="text-warm-gray-light text-lg">·</span>
