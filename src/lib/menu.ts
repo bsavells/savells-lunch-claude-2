@@ -12,6 +12,8 @@ interface NutrisliceItem {
   text: string;
   is_section_title: boolean;
   is_station_header: boolean;
+  station_id: number | null;
+  serving_size_unit: string | null;
   food: {
     name: string;
     food_category: string;
@@ -20,6 +22,22 @@ interface NutrisliceItem {
   } | null;
   category: string;
 }
+
+// Station names that indicate the items underneath are sides
+const SIDE_STATION_KEYWORDS = new Set([
+  'vegetable', 'vegetables', 'fruit', 'fruits', 'beverage', 'beverages',
+  'milk', 'salad', 'salads', 'condiment', 'condiments', 'grain', 'grains',
+  'dessert', 'desserts', 'snack', 'snacks', 'juice',
+]);
+
+function isSideStation(stationName: string): boolean {
+  const lower = stationName.toLowerCase().trim();
+  return SIDE_STATION_KEYWORDS.has(lower) ||
+    [...SIDE_STATION_KEYWORDS].some((kw) => lower.includes(kw));
+}
+
+// Serving units that indicate a side (scoops, small cups) rather than a full entree
+const SIDE_SERVING_PATTERNS = /scoop|cup\s*#|fl\s*oz|1\s*oz|packet/i;
 
 interface NutrisliceDay {
   date: string;
@@ -55,11 +73,19 @@ export async function fetchMenuFromNutrislice(school: School, mondayDate: string
     const entrees: MenuItem[] = [];
     const sides: MenuItem[] = [];
 
+    // Build station id → name map from headers in this day
+    const stationNames = new Map<number, string>();
+    for (const item of day.menu_items) {
+      if (item.is_station_header && item.station_id && item.text) {
+        stationNames.set(item.station_id, item.text);
+      }
+    }
+
     for (const item of day.menu_items) {
       if (item.is_section_title || item.is_station_header) continue;
       if (!item.food) continue;
 
-      const category = (item.food.food_category || item.category || 'other').toLowerCase();
+      const category = (item.food.food_category || item.category || '').toLowerCase();
       const menuItem: MenuItem = {
         id: item.id,
         name: item.food.name,
@@ -67,11 +93,32 @@ export async function fetchMenuFromNutrislice(school: School, mondayDate: string
         imageUrl: item.food.image_thumbnail || item.food.image_url || undefined,
       };
 
-      if (SIDE_CATEGORIES.has(category)) {
+      // Layer 1: explicit category from Nutrislice
+      if (category && SIDE_CATEGORIES.has(category)) {
         sides.push(menuItem);
-      } else {
-        entrees.push(menuItem);
+        continue;
       }
+      if (category === 'entree') {
+        entrees.push(menuItem);
+        continue;
+      }
+
+      // Layer 2: station name (e.g. "Vegetables", "Fruit")
+      const stationName = item.station_id ? stationNames.get(item.station_id) ?? '' : '';
+      if (stationName && isSideStation(stationName)) {
+        sides.push(menuItem);
+        continue;
+      }
+
+      // Layer 3: serving unit suggests a scooped/poured side
+      const servingUnit = item.serving_size_unit ?? '';
+      if (servingUnit && SIDE_SERVING_PATTERNS.test(servingUnit)) {
+        sides.push(menuItem);
+        continue;
+      }
+
+      // Default: treat as entree
+      entrees.push(menuItem);
     }
 
     weekMenu[dateStr] = { date: dateStr, entrees, sides };
