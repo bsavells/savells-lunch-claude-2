@@ -45,15 +45,22 @@ export async function GET(
   try {
     const menu = await fetchMenuFromNutrislice(school as School, monday);
 
-    // Upsert cache
-    await supabase
-      .from('menu_cache')
-      .upsert(
-        { school, week_start_date: monday, menu_data: menu, fetched_at: new Date().toISOString() },
-        { onConflict: 'school,week_start_date' }
-      );
+    // Only cache when the menu actually has content — don't lock in empty results
+    // for 24 hours, since the district may publish the menu later in the week.
+    const hasItems = Object.values(menu).some(
+      (day) => day.entrees.length > 0 || day.sides.length > 0
+    );
 
-    return NextResponse.json({ menu, cached: false });
+    if (hasItems) {
+      await supabase
+        .from('menu_cache')
+        .upsert(
+          { school, week_start_date: monday, menu_data: menu, fetched_at: new Date().toISOString() },
+          { onConflict: 'school,week_start_date' }
+        );
+    }
+
+    return NextResponse.json({ menu, cached: false, published: hasItems });
   } catch (error) {
     // If fetch fails but we have stale cache, serve it
     if (cached) {

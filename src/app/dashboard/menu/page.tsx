@@ -275,7 +275,18 @@ export default function MenuPage() {
                   )}
 
                   {!bolesDay && !mooreDay && !martinDay && (
-                    <p className="text-warm-gray font-body text-sm italic">No menu available</p>
+                    <div className="flex items-center gap-3 py-1">
+                      <span className="text-2xl">📋</span>
+                      <div>
+                        <p className="font-display font-semibold text-sm text-foreground">
+                          Menu not published yet
+                        </p>
+                        <p className="font-body text-xs text-warm-gray mt-0.5">
+                          Arlington ISD usually posts menus by Thursday — check back then.
+                          You can still log a packed lunch.
+                        </p>
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>

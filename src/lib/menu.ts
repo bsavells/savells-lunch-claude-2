@@ -70,7 +70,7 @@ export async function fetchMenuFromNutrislice(school: School, mondayDate: string
   const day = d.getDate();
 
   const url = `${NUTRISLICE_BASE}/${school}/menu-type/lunch/${year}/${month}/${day}/`;
-  const res = await fetch(url, { next: { revalidate: 3600 } });
+  const res = await fetch(url, { next: { revalidate: 600 } });
 
   if (!res.ok) {
     throw new Error(`Nutrislice API error: ${res.status}`);
